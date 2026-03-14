@@ -68,7 +68,7 @@ class ScheduleTabset
                 <ul style="margin:5px 0 0 20px;">
                     <li><strong>Рабочий день:</strong> Повторяющийся день недели. Каждый день недели можно использовать только один раз <em>для каждого кабинета</em>.</li>
                     <li><strong>Особый день:</strong> Конкретная дата, которая переопределяет стандартное расписание.</li>
-                    <li><strong>Выходной:</strong> Конкретная дата выходного дня (переопределяет рабочий и особый день). Без адреса и часов.</li>
+                    <li><strong>Выходной:</strong> Конкретная дата выходного дня (переопределяет рабочий и особый день). Без адреса и часов. <em>Применяется ко всем кабинетам.</em></li>
                     <li>Данные будут сохранены в таблицу <strong>sk_schedule</strong> автоматически при сохранении карточки сотрудника.</li>
                     <li>При сохранении расписание будет развёрнуто на все дни текущего года (<?= $currentYear ?>) по каждому кабинету.</li>
                 </ul>
@@ -95,11 +95,11 @@ class ScheduleTabset
             ]
         };
         let rowCounter = 0;
-        // Track used weekdays/dates per room_id
         let usedWorkDaysByRoom = {};
         let usedSpecialDatesByRoom = {};
-        let usedWeekendDatesByRoom = {};
+        let usedWeekendDates = new Set();
         let autoSaveTimeout = null;
+        let allRoomIds = new Set();
 
         function init() {
             const addRowBtn = document.getElementById('addRow');
@@ -183,11 +183,9 @@ class ScheduleTabset
         function getUsedSetsForRoom(roomId) {
             if (!usedWorkDaysByRoom[roomId]) usedWorkDaysByRoom[roomId] = new Set();
             if (!usedSpecialDatesByRoom[roomId]) usedSpecialDatesByRoom[roomId] = new Set();
-            if (!usedWeekendDatesByRoom[roomId]) usedWeekendDatesByRoom[roomId] = new Set();
             return {
                 workDays: usedWorkDaysByRoom[roomId],
-                specialDates: usedSpecialDatesByRoom[roomId],
-                weekendDates: usedWeekendDatesByRoom[roomId]
+                specialDates: usedSpecialDatesByRoom[roomId]
             };
         }
 
@@ -222,7 +220,13 @@ class ScheduleTabset
             tr.className = 'adm-list-table-row';
             tr.dataset.rowId = rowId;
 
+            const type = data ? data.type : 'working';
             const roomId = (data && data.roomId) ? data.roomId : '';
+            
+            if (roomId) {
+                allRoomIds.add(roomId);
+            }
+
             const sets = getUsedSetsForRoom(roomId || '0');
 
             let weekdayOptions = '';
@@ -232,7 +236,6 @@ class ScheduleTabset
                 weekdayOptions += '<option value="' + wd.value + '" ' + selected + ' ' + disabled + '>' + wd.label + '</option>';
             });
 
-            const type = data ? data.type : 'working';
             const weekdayDisplay = (type === 'working') ? 'block' : 'none';
             const dateDisplay = (type === 'special' || type === 'weekend') ? 'block' : 'none';
             const addressDisplay = (type === 'working' || type === 'special') ? 'table-cell' : 'none';
@@ -328,7 +331,7 @@ class ScheduleTabset
                         sets.specialDates.delete(initialData.date);
                     }
                     if (initialData && initialData.type === 'weekend' && initialData.date) {
-                        sets.weekendDates.delete(initialData.date);
+                        usedWeekendDates.delete(initialData.date);
                     }
                     
                     updateSelectOptions();
@@ -358,31 +361,41 @@ class ScheduleTabset
 
             if (dateInput) {
                 dateInput.onchange = function(e) {
-                    const currentRoomId = roomHiddenInput ? roomHiddenInput.value : '0';
-                    const sets = getUsedSetsForRoom(currentRoomId);
                     const newVal = e.target.value;
                     const oldVal = (initialData && (initialData.type === 'special' || initialData.type === 'weekend')) ? initialData.date : null;
                     const currentType = typeSelect ? typeSelect.value : '';
                     
                     if (newVal && newVal !== oldVal) {
-                        if (currentType === 'weekend' && sets.weekendDates.has(newVal)) {
-                            alert('⚠️ Дата ' + newVal + ' уже используется как выходной для этого кабинета.');
+                        if (currentType === 'weekend' && usedWeekendDates.has(newVal)) {
+                            alert('⚠️ Дата ' + newVal + ' уже используется как выходной.');
                             e.target.value = '';
                             return;
                         }
-                        if (currentType === 'special' && sets.specialDates.has(newVal)) {
-                            alert('⚠️ Дата ' + newVal + ' уже используется как особый день для этого кабинета.');
-                            e.target.value = '';
-                            return;
+                        if (currentType === 'special') {
+                            const currentRoomId = roomHiddenInput ? roomHiddenInput.value : '0';
+                            const sets = getUsedSetsForRoom(currentRoomId);
+                            if (sets.specialDates.has(newVal)) {
+                                alert('⚠️ Дата ' + newVal + ' уже используется как особый день для этого кабинета.');
+                                e.target.value = '';
+                                return;
+                            }
                         }
                     }
                     if (oldVal && newVal !== oldVal) {
-                        if (initialData && initialData.type === 'weekend') sets.weekendDates.delete(oldVal);
-                        if (initialData && initialData.type === 'special') sets.specialDates.delete(oldVal);
+                        if (initialData && initialData.type === 'weekend') usedWeekendDates.delete(oldVal);
+                        if (initialData && initialData.type === 'special') {
+                            const currentRoomId = roomHiddenInput ? roomHiddenInput.value : '0';
+                            const sets = getUsedSetsForRoom(currentRoomId);
+                            sets.specialDates.delete(oldVal);
+                        }
                     }
                     if (newVal) {
-                        if (currentType === 'weekend') sets.weekendDates.add(newVal);
-                        if (currentType === 'special') sets.specialDates.add(newVal);
+                        if (currentType === 'weekend') usedWeekendDates.add(newVal);
+                        if (currentType === 'special') {
+                            const currentRoomId = roomHiddenInput ? roomHiddenInput.value : '0';
+                            const sets = getUsedSetsForRoom(currentRoomId);
+                            sets.specialDates.add(newVal);
+                        }
                     }
                     autoSaveToJson();
                 };
@@ -418,7 +431,7 @@ class ScheduleTabset
                         sets.specialDates.delete(initialData.date);
                     }
                     if (type === 'weekend' && initialData && initialData.date) {
-                        sets.weekendDates.delete(initialData.date);
+                        usedWeekendDates.delete(initialData.date);
                     }
                     tr.remove();
                     updateSelectOptions();
@@ -465,14 +478,12 @@ class ScheduleTabset
             if (type === 'working') {
                 const weekday = weekdaySelect ? weekdaySelect.value : '';
                 return weekday ? { type: type, weekday: parseInt(weekday), start: start, end: end, roomId: roomId, roomName: roomName } : null;
-            } else if (type === 'special' || type === 'weekend') {
+            } else if (type === 'special') {
                 const date = dateInput ? dateInput.value : '';
-                const data = { type: type, date: date, roomId: roomId, roomName: roomName };
-                if (type === 'special') {
-                    data.start = start;
-                    data.end = end;
-                }
-                return date ? data : null;
+                return date ? { type: type, date: date, start: start, end: end, roomId: roomId, roomName: roomName } : null;
+            } else if (type === 'weekend') {
+                const date = dateInput ? dateInput.value : '';
+                return date ? { type: type, date: date, roomId: null, roomName: null } : null;
             }
             return null;
         }
@@ -503,7 +514,38 @@ class ScheduleTabset
 
         function extractRulesFromExpanded(expandedData) {
             const rules = [];
-            const processedRooms = {};
+            const weekendDatesGlobal = new Set();
+            
+            // First pass: collect all weekend dates (they apply to all rooms)
+            for (const roomId in expandedData) {
+                if (roomId === 'roomName') continue;
+                const roomData = expandedData[roomId];
+                if (!roomData || typeof roomData !== 'object') continue;
+                
+                for (const dateStr in roomData) {
+                    if (dateStr === 'roomName') continue;
+                    const dayData = roomData[dateStr];
+                    if (!dayData || typeof dayData !== 'object') continue;
+                    
+                    if (dayData.type === 'weekend') {
+                        weekendDatesGlobal.add(dateStr);
+                    }
+                }
+            }
+            
+            // Add weekend rules (without roomId - applies to all)
+            weekendDatesGlobal.forEach(function(dateStr) {
+                rules.push({
+                    type: 'weekend',
+                    date: dateStr,
+                    roomId: null,
+                    roomName: null
+                });
+            });
+            
+            // Second pass: collect working and special days per room
+            const processedWorking = {};
+            const processedSpecial = {};
             
             for (const roomId in expandedData) {
                 if (roomId === 'roomName') continue;
@@ -511,19 +553,17 @@ class ScheduleTabset
                 if (!roomData || typeof roomData !== 'object') continue;
                 
                 const roomName = roomData.roomName || 'Кабинет #' + roomId;
-                const workingDays = {};
-                const specialDays = {};
-                const weekendDays = {};
                 
                 for (const dateStr in roomData) {
                     if (dateStr === 'roomName') continue;
                     const dayData = roomData[dateStr];
                     if (!dayData || typeof dayData !== 'object') continue;
                     
-                    if (dayData.source === 'working' || (dayData.type === 'working' && dayData.weekday !== undefined && dayData.start && dayData.end)) {
+                    if (dayData.type === 'working' && dayData.weekday !== undefined && dayData.start && dayData.end) {
                         const weekday = dayData.weekday;
-                        if (!workingDays[weekday]) {
-                            workingDays[weekday] = {
+                        const key = roomId + '_' + weekday;
+                        if (!processedWorking[key]) {
+                            processedWorking[key] = {
                                 type: 'working',
                                 weekday: weekday,
                                 start: dayData.start,
@@ -532,9 +572,10 @@ class ScheduleTabset
                                 roomName: roomName
                             };
                         }
-                    } else if (dayData.source === 'special' || dayData.type === 'special') {
-                        if (!specialDays[dateStr]) {
-                            specialDays[dateStr] = {
+                    } else if (dayData.type === 'special') {
+                        const key = roomId + '_' + dateStr;
+                        if (!processedSpecial[key]) {
+                            processedSpecial[key] = {
                                 type: 'special',
                                 date: dateStr,
                                 start: dayData.start,
@@ -543,22 +584,12 @@ class ScheduleTabset
                                 roomName: roomName
                             };
                         }
-                    } else if (dayData.source === 'weekend' || dayData.type === 'weekend') {
-                        if (!weekendDays[dateStr]) {
-                            weekendDays[dateStr] = {
-                                type: 'weekend',
-                                date: dateStr,
-                                roomId: parseInt(roomId),
-                                roomName: roomName
-                            };
-                        }
                     }
                 }
-                
-                for (const wd in workingDays) rules.push(workingDays[wd]);
-                for (const d in specialDays) rules.push(specialDays[d]);
-                for (const d in weekendDays) rules.push(weekendDays[d]);
             }
+            
+            for (const key in processedWorking) rules.push(processedWorking[key]);
+            for (const key in processedSpecial) rules.push(processedSpecial[key]);
             
             return rules;
         }
@@ -587,7 +618,8 @@ class ScheduleTabset
                 
                 usedWorkDaysByRoom = {};
                 usedSpecialDatesByRoom = {};
-                usedWeekendDatesByRoom = {};
+                usedWeekendDates = new Set();
+                allRoomIds = new Set();
                 
                 const tbody = document.getElementById('scheduleBody');
                 if (tbody) {
@@ -597,6 +629,9 @@ class ScheduleTabset
                 
                 rules.forEach(function(row) {
                     const roomId = row.roomId || '0';
+                    if (row.roomId) {
+                        allRoomIds.add(row.roomId);
+                    }
                     const sets = getUsedSetsForRoom(roomId);
                     
                     if (row.type === 'working' && row.weekday !== undefined) {
@@ -606,7 +641,7 @@ class ScheduleTabset
                         sets.specialDates.add(row.date);
                     }
                     if (row.type === 'weekend' && row.date) {
-                        sets.weekendDates.add(row.date);
+                        usedWeekendDates.add(row.date);
                     }
                     addRow(row);
                 });
@@ -623,7 +658,8 @@ class ScheduleTabset
             if (!confirm('Очистить всё расписание для этого сотрудника?')) return;
             usedWorkDaysByRoom = {};
             usedSpecialDatesByRoom = {};
-            usedWeekendDatesByRoom = {};
+            usedWeekendDates = new Set();
+            allRoomIds = new Set();
             const tbody = document.getElementById('scheduleBody');
             if (tbody) {
                 tbody.innerHTML = '';

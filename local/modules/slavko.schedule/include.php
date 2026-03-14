@@ -75,16 +75,48 @@ class IblockElementSave
     private static function expandScheduleToYearByRoom($rules, $year)
     {
         $scheduleByRoom = [];
+        $allRoomIds = [];
+        $roomNames = [];
         
         $workingDays = [];
         $specialDays = [];
-        $weekendDays = [];
+        $weekendDates = [];
 
+        // First pass: collect all VALID room IDs (roomId > 0) and their names
         foreach ($rules as $rule) {
             $roomId = $rule['roomId'] ?? 0;
+            // Only collect rooms with valid ID (> 0)
+            if ($roomId > 0 && !isset($allRoomIds[$roomId])) {
+                $allRoomIds[$roomId] = true;
+                $roomNames[$roomId] = $rule['roomName'] ?? 'Кабинет #' . $roomId;
+            }
+        }
+
+        // Second pass: organize rules by room and type
+        foreach ($rules as $rule) {
+            $roomId = $rule['roomId'] ?? 0;
+            
+            // Skip rules without valid room (except weekends which apply to all rooms)
+            if ($roomId <= 0 && $rule['type'] !== 'weekend') {
+                continue;
+            }
+            
+            // For weekends, just collect the date (will apply to all valid rooms)
+            if ($rule['type'] === 'weekend' && !empty($rule['date'])) {
+                if (!in_array($rule['date'], $weekendDates)) {
+                    $weekendDates[] = $rule['date'];
+                }
+                continue;
+            }
+            
+            // Skip if room doesn't exist
+            if (!isset($allRoomIds[$roomId])) {
+                continue;
+            }
+            
             if (!isset($scheduleByRoom[$roomId])) {
                 $scheduleByRoom[$roomId] = [
-                    'roomName' => $rule['roomName'] ?? 'Кабинет #' . $roomId
+                    'roomName' => $roomNames[$roomId] ?? 'Кабинет #' . $roomId
                 ];
             }
             
@@ -104,17 +136,13 @@ class IblockElementSave
                     'start' => $rule['start'] ?? null,
                     'end' => $rule['end'] ?? null
                 ];
-            } elseif ($rule['type'] === 'weekend' && !empty($rule['date'])) {
-                if (!isset($weekendDays[$roomId])) {
-                    $weekendDays[$roomId] = [];
-                }
-                $weekendDays[$roomId][$rule['date']] = true;
             }
         }
 
         $startDate = new DateTime("$year-01-01");
         $endDate = new DateTime("$year-12-31");
 
+        // Generate schedule for each VALID room only
         foreach ($scheduleByRoom as $roomId => &$roomData) {
             $currentDate = clone $startDate;
             while ($currentDate <= $endDate) {
@@ -124,48 +152,54 @@ class IblockElementSave
 
                 $hasWorkingRule = isset($workingDays[$roomId][$dayOfWeekConverted]);
                 $hasSpecialRule = isset($specialDays[$roomId][$dateStr]);
-                $hasWeekendRule = isset($weekendDays[$roomId][$dateStr]);
+                $hasWeekendRule = in_array($dateStr, $weekendDates);
 
-                // Skip days without any specific schedule (no start/end for working days)
+                // Skip days without any specific schedule
                 if (!$hasSpecialRule && !$hasWeekendRule) {
                     if ($hasWorkingRule) {
                         $workRule = $workingDays[$roomId][$dayOfWeekConverted];
-                        // Only save if working day has start AND end times
                         if (empty($workRule['start']) || empty($workRule['end'])) {
                             $currentDate->modify('+1 day');
                             continue;
                         }
                     } else {
-                        // No rule at all for this day - skip
                         $currentDate->modify('+1 day');
                         continue;
                     }
                 }
 
-                // Build day schedule
+                // Build day schedule - only include start/end if they have values
                 if ($hasWeekendRule) {
                     $roomData[$dateStr] = [
                         'type' => 'weekend',
-                        'weekday' => $dayOfWeekConverted,
-                        'start' => null,
-                        'end' => null
+                        'weekday' => $dayOfWeekConverted
                     ];
                 } elseif ($hasSpecialRule) {
                     $specialRule = $specialDays[$roomId][$dateStr];
-                    $roomData[$dateStr] = [
+                    $daySchedule = [
                         'type' => 'special',
-                        'weekday' => $dayOfWeekConverted,
-                        'start' => $specialRule['start'],
-                        'end' => $specialRule['end']
+                        'weekday' => $dayOfWeekConverted
                     ];
+                    if (!empty($specialRule['start'])) {
+                        $daySchedule['start'] = $specialRule['start'];
+                    }
+                    if (!empty($specialRule['end'])) {
+                        $daySchedule['end'] = $specialRule['end'];
+                    }
+                    $roomData[$dateStr] = $daySchedule;
                 } elseif ($hasWorkingRule) {
                     $workRule = $workingDays[$roomId][$dayOfWeekConverted];
-                    $roomData[$dateStr] = [
+                    $daySchedule = [
                         'type' => 'working',
-                        'weekday' => $dayOfWeekConverted,
-                        'start' => $workRule['start'],
-                        'end' => $workRule['end']
+                        'weekday' => $dayOfWeekConverted
                     ];
+                    if (!empty($workRule['start'])) {
+                        $daySchedule['start'] = $workRule['start'];
+                    }
+                    if (!empty($workRule['end'])) {
+                        $daySchedule['end'] = $workRule['end'];
+                    }
+                    $roomData[$dateStr] = $daySchedule;
                 }
 
                 $currentDate->modify('+1 day');
