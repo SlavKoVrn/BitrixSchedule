@@ -1,14 +1,12 @@
 <?php
 if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
 /** @var array $arResult */
+global $templateFolder;
 ?>
 
 <div id="schedule-calendar" class="schedule-calendar" 
      data-worker-id="<?= (int)$arResult['PARAMS']['WORKER_ID'] ?>"
-     data-year="<?= (int)$arResult['PARAMS']['YEAR'] ?>"
-     data-init-view="<?= htmlspecialcharsbx($arResult['PARAMS']['INIT_VIEW']) ?>"
-     data-first-hour="<?= (int)$arResult['PARAMS']['FIRST_HOUR'] ?>"
-     data-last-hour="<?= (int)$arResult['PARAMS']['LAST_HOUR'] ?>">
+     data-year="<?= (int)$arResult['PARAMS']['YEAR'] ?>">
     
     <div class="schedule-calendar-header">
         <div class="schedule-legend">
@@ -38,5 +36,5 @@ window.SCHEDULE_ROOMS = <?= \Bitrix\Main\Web\Json::encode($arResult['ROOMS']) ?>
 // Add FullCalendar CSS/JS from CDN or local
 $APPLICATION->SetAdditionalCSS('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css');
 $APPLICATION->AddHeadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js', [], false, true);
-$APPLICATION->AddHeadScript($this->GetTemplatePath() . '/script.js', [], false, true);
-$APPLICATION->SetAdditionalCSS($this->GetTemplatePath() . '/style.css');
+$APPLICATION->AddHeadScript($templateFolder . '/script.js', [], false, true);
+$APPLICATION->SetAdditionalCSS($templateFolder . '/style.css');

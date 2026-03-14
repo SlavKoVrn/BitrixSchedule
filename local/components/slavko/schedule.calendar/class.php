@@ -10,9 +10,9 @@ class ScheduleCalendarComponent extends \CBitrixComponent
     {
         $arParams['WORKER_ID'] = (int)($arParams['WORKER_ID'] ?: $_REQUEST['worker_id'] ?? 0);
         $arParams['YEAR'] = (int)($arParams['YEAR'] ?: date('Y'));
-        $arParams['INIT_VIEW'] = $arParams['INIT_VIEW'] ?: 'dayGridMonth';
-        $arParams['FIRST_HOUR'] = (int)($arParams['FIRST_HOUR'] ?: 8);
-        $arParams['LAST_HOUR'] = (int)($arParams['LAST_HOUR'] ?: 20);
+        //$arParams['INIT_VIEW'] = $arParams['INIT_VIEW'] ?: 'dayGridMonth';
+        //$arParams['FIRST_HOUR'] = (int)($arParams['FIRST_HOUR'] ?: 8);
+        //$arParams['LAST_HOUR'] = (int)($arParams['LAST_HOUR'] ?: 20);
         return $arParams;
     }
 
