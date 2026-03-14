@@ -1,4 +1,4 @@
-[http://bitrix.kadastrcard.ru/](http://bitrix.kadastrcard.ru/)
+деплой [http://bitrix.kadastrcard.ru/](http://bitrix.kadastrcard.ru/)
 
 # Тестовое задание
 
@@ -8,7 +8,7 @@
 
 В продукте уже присутствует базовый модуль записи на приём к врачу, однако сейчас он реализован в упрощённом виде — фактически на уровне вёрстки 
 
-и без административного интерфейса для управления расписанием.
+ без административного интерфейса для управления расписанием.
 
 Посмотреть решение можно здесь:
 [https://marketplace.1c-bitrix.ru/solutions/vit.doctor/#tab-comments-link](https://marketplace.1c-bitrix.ru/solutions/vit.doctor/#tab-comments-link)
@@ -52,3 +52,27 @@
 — ссылку на решение (GitHub или архив)
 
 — короткое описание архитектуры решения
+
+# Установка
+
+1. скопровать каталог /local/ в корень сайта
+
+2. установить модуль "Расписание сотрудников" /bitrix/admin/partner_modules.php
+
+3. прописать компонент куда-либо (в диплое прописан в includes/sections/doctor.php)
+
+```
+$APPLICATION->IncludeComponent(
+    "slavko:schedule.calendar",
+    ".default",
+    [
+        "WORKER_ID" => 53,
+        "YEAR" => date('Y'),
+        "INIT_VIEW" => "dayGridMonth", // dayGridMonth, timeGridWeek, timeGridDay, listMonth
+        "FIRST_HOUR" => "8",
+        "LAST_HOUR" => "20",
+    ],
+    false
+);
+```
+
