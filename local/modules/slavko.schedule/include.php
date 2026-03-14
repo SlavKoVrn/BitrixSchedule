@@ -122,47 +122,52 @@ class IblockElementSave
                 $dayOfWeek = (int)$currentDate->format('N');
                 $dayOfWeekConverted = ($dayOfWeek === 7) ? 0 : $dayOfWeek;
 
-                $daySchedule = [
-                    'type' => 'working',
-                    'weekday' => $dayOfWeekConverted,
-                    'start' => null,
-                    'end' => null,
-                    'source' => 'default'
-                ];
+                $hasWorkingRule = isset($workingDays[$roomId][$dayOfWeekConverted]);
+                $hasSpecialRule = isset($specialDays[$roomId][$dateStr]);
+                $hasWeekendRule = isset($weekendDays[$roomId][$dateStr]);
 
-                if (isset($workingDays[$roomId][$dayOfWeekConverted])) {
-                    $workRule = $workingDays[$roomId][$dayOfWeekConverted];
-                    $daySchedule = [
-                        'type' => 'working',
-                        'weekday' => $dayOfWeekConverted,
-                        'start' => $workRule['start'],
-                        'end' => $workRule['end'],
-                        'source' => 'working'
-                    ];
+                // Skip days without any specific schedule (no start/end for working days)
+                if (!$hasSpecialRule && !$hasWeekendRule) {
+                    if ($hasWorkingRule) {
+                        $workRule = $workingDays[$roomId][$dayOfWeekConverted];
+                        // Only save if working day has start AND end times
+                        if (empty($workRule['start']) || empty($workRule['end'])) {
+                            $currentDate->modify('+1 day');
+                            continue;
+                        }
+                    } else {
+                        // No rule at all for this day - skip
+                        $currentDate->modify('+1 day');
+                        continue;
+                    }
                 }
 
-                if (isset($specialDays[$roomId][$dateStr])) {
-                    $specialRule = $specialDays[$roomId][$dateStr];
-                    $daySchedule = [
-                        'type' => 'special',
-                        'weekday' => $dayOfWeekConverted,
-                        'start' => $specialRule['start'],
-                        'end' => $specialRule['end'],
-                        'source' => 'special'
-                    ];
-                }
-
-                if (isset($weekendDays[$roomId][$dateStr])) {
-                    $daySchedule = [
+                // Build day schedule
+                if ($hasWeekendRule) {
+                    $roomData[$dateStr] = [
                         'type' => 'weekend',
                         'weekday' => $dayOfWeekConverted,
                         'start' => null,
-                        'end' => null,
-                        'source' => 'weekend'
+                        'end' => null
+                    ];
+                } elseif ($hasSpecialRule) {
+                    $specialRule = $specialDays[$roomId][$dateStr];
+                    $roomData[$dateStr] = [
+                        'type' => 'special',
+                        'weekday' => $dayOfWeekConverted,
+                        'start' => $specialRule['start'],
+                        'end' => $specialRule['end']
+                    ];
+                } elseif ($hasWorkingRule) {
+                    $workRule = $workingDays[$roomId][$dayOfWeekConverted];
+                    $roomData[$dateStr] = [
+                        'type' => 'working',
+                        'weekday' => $dayOfWeekConverted,
+                        'start' => $workRule['start'],
+                        'end' => $workRule['end']
                     ];
                 }
 
-                $roomData[$dateStr] = $daySchedule;
                 $currentDate->modify('+1 day');
             }
         }
