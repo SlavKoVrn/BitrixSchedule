@@ -6,7 +6,10 @@ global $templateFolder;
 
 <div id="schedule-calendar" class="schedule-calendar" 
      data-worker-id="<?= (int)$arResult['PARAMS']['WORKER_ID'] ?>"
-     data-year="<?= (int)$arResult['PARAMS']['YEAR'] ?>">
+     data-year="<?= (int)$arResult['PARAMS']['YEAR'] ?>"
+     data-init-view="<?= htmlspecialcharsbx($arResult['PARAMS']['INIT_VIEW']) ?>"
+     data-first-hour="<?= (int)$arResult['PARAMS']['FIRST_HOUR'] ?>"
+     data-last-hour="<?= (int)$arResult['PARAMS']['LAST_HOUR'] ?>">
     
     <div class="schedule-calendar-header">
         <div class="schedule-legend">
