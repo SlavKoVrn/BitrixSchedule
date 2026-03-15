@@ -60,8 +60,8 @@ if ($action === 'getEvents') {
 
                         // 7. Extract Times
                         // Default to 09:00-18:00 if not specified (e.g. weekends might lack times)
-                        $startTime = $dayInfo['start'] ?? '09:00';
-                        $endTime = $dayInfo['end'] ?? '18:00';
+                        $startTime = $dayInfo['start'] ?? '00:00';
+                        $endTime = $dayInfo['end'] ?? '23:59';
                         $type = $dayInfo['type'] ?? 'working';
 
                         // 8. Build Event Object
@@ -129,8 +129,8 @@ if ($action === 'getEvents') {
                         'worker_name' => $workerName,
                         'type' => $eventData['type'] ?? 'working',
                         'weekday' => $eventData['weekday'] ?? null,
-                        'start' => $eventData['start'] ?? '09:00',
-                        'end' => $eventData['end'] ?? '18:00',
+                        'start' => $eventData['start'] ?? '00:00',
+                        'end' => $eventData['end'] ?? '23:59',
                         // Add any additional fields you might need
                         'is_weekend' => ($eventData['type'] ?? '') === 'weekend',
                         'is_special' => ($eventData['type'] ?? '') === 'special',
