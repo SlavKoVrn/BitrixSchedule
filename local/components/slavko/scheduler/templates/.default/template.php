@@ -84,21 +84,13 @@ $(document).ready(function() {
                 dataType: 'json',
                 onsuccess: function(response) {
                     if (response.error) {
-                        BX.UI.Dialogs.MessageBox.show({
-                            title: 'Ошибка',
-                            message: response.error,
-                            type: 'error'
-                        });
+                        console.log(response.error);
                         return;
                     }
                     showEventPopup(response);
                 },
                 onfailure: function(xhr, status, error) {
-                    BX.UI.Dialogs.MessageBox.show({
-                        title: 'Ошибка',
-                        message: 'Не удалось загрузить данные события',
-                        type: 'error'
-                    });
+                    console.log(error);
                 }
             });
         }
