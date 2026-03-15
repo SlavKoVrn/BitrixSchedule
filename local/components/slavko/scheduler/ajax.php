@@ -62,9 +62,9 @@ if ($action === 'getEvents') {
 
                         // 8. Build Event Object
                         $result[] = [
-                            'id' => $roomId,
+                            'id' => $dateKey . '_' . $roomId,
                             'resourceId' => $roomId,
-                            'title' => $roomName,
+                            'title' => date('d.m.Y',strtotime($dateKey)) . ' ' . $startTime.'-'. $endTime.' '.$roomName,
                             'start' => $dateKey . ' ' . $startTime,
                             'end' => $dateKey . ' ' . $endTime,
                             'backgroundColor' => ($type === 'weekend') ? '#FF5722' : (($type === 'special') ? '#FFC107' : '#4CAF50'),

@@ -46,7 +46,7 @@ $(document).ready(function() {
                 duration: { days: 3 }
             }
         },
-        resourceLabelText: 'Номер на час',
+        resourceLabelText: 'врач <?= $arResult["WORKER_NAME"] ?>',
         resources: <?= \Bitrix\Main\Web\Json::encode($arResult['ROOMS']) ?>,
         events: {
             url: '/local/components/slavko/scheduler/ajax.php?action=getEvents&worker_id=<?= $arParams['WORKER_ID'] ?>',

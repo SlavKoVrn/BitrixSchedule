@@ -1,8 +1,8 @@
 <?php
 if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
 
-use Bitrix\Main\Engine\Contract\Controllerable;
-use Bitrix\Main\Application;
+use Bitrix\Iblock\ElementTable;
+use Bitrix\Main\ArgumentException;
 
 class SchedulerComponent extends \CBitrixComponent
 {
@@ -34,6 +34,7 @@ class SchedulerComponent extends \CBitrixComponent
 
         $this->arResult['ROOMS'] = $this->extractRooms($scheduleData);
         $this->arResult['PARAMS'] = $this->arParams;
+        $this->arResult['WORKER_NAME'] = $this->getWorkerName();
 
         $this->includeComponentTemplate();
     }
@@ -62,5 +63,40 @@ class SchedulerComponent extends \CBitrixComponent
         }
         
         return $rooms;
+    }
+
+    private function getWorkerName()
+    {
+        $workerName = '';
+
+        // Get IBLOCK_ID from options
+        $workerIblockId = (int)COption::GetOptionString("slavko.schedule", "worker_iblock_id", 0);
+
+        // Get Element ID from params
+        $workerId = (int)$this->arParams['WORKER_ID'];
+
+        // Validate data
+        if ($workerIblockId > 0 && $workerId > 0) {
+            try {
+                // D7 ORM Query
+                $element = ElementTable::getRow([
+                    'filter' => [
+                        '=ID' => $workerId,
+                        '=IBLOCK_ID' => $workerIblockId,
+                        '=ACTIVE' => true // Only get active elements
+                    ],
+                    'select' => ['NAME']
+                ]);
+
+                if (!empty($element['NAME'])) {
+                    $workerName = $element['NAME'];
+                }
+            } catch (ArgumentException $e) {
+                // Handle case where IBLOCK_ID is incorrect or table doesn't exist
+                // Log error if needed
+            }
+        }
+
+        return $workerName;
     }
 }
