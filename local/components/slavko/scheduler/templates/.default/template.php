@@ -34,7 +34,7 @@ $(document).ready(function() {
         resourceAreaWidth: 250,
         editable: true,
         aspectRatio: 1.5,
-        scrollTime: '10:00',
+        scrollTime: '08:00',
         header: {
             left: 'promptResource today prev,next',
             center: 'title',
