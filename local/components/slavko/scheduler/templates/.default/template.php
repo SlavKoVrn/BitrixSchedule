@@ -65,6 +65,7 @@ $(document).ready(function() {
                 dataType: 'json',
                 onsuccess: function(response) {
                     console.log(response);
+                    showDatetimePopup(response);
                 },
                 onfailure: function(xhr, status, error) {
                     console.log(error);
@@ -165,6 +166,28 @@ function showEventPopup(event) {
                 '</div>' : ''
         ) +
         '</div>' +
+        '</div>';
+
+    showNativePopup(popupContent);
+}
+
+function showDatetimePopup(datetime) {
+    var popupContent =
+        '<div class="event-popup">' +
+            '<div class="event-popup-body">' +
+                '<div class="event-row">' +
+                '<span class="event-label">Дата:</span>' +
+                '<span class="event-value">' + datetime.date + '</span>' +
+                '</div>' +
+                '<div class="event-row">' +
+                '<span class="event-label">Время:</span>' +
+                '<span class="event-value">' + datetime.hour + ':' + datetime.minute + '</span>' +
+                '</div>' +
+                '<div class="event-row">' +
+                '<span class="event-label">День недели:</span>' +
+                '<span class="event-value">' + getWeekdayName(datetime.weekday) + '</span>' +
+                '</div>' +
+            '</div>' +
         '</div>';
 
     showNativePopup(popupContent);

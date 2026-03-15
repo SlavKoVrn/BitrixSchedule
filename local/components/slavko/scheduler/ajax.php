@@ -158,7 +158,8 @@ if ($action === 'getEvents') {
     $json = array(
         'date'=>gmdate("d.m.Y",$date),
         'hour'=>gmdate("H",$date),
-        'minute'=>gmdate("i",$date)
+        'minute'=>gmdate("i",$date),
+        'weekday' => date('w', $date),
     );
     echo \Bitrix\Main\Web\Json::encode($json);
 }
