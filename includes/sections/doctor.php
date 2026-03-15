@@ -45,16 +45,15 @@ $APPLICATION->IncludeComponent('bitrix:news.detail', 'vd-doctor', [
 		'STRICT_SECTION_CHECK' => 'N',
 		'USE_PERMISSIONS' => 'N'
 ]);
-
-$APPLICATION->IncludeComponent(
-    "slavko:schedule.calendar",
-    ".default",
-    [
-        "WORKER_ID" => 53,
-        "YEAR" => date('Y'),
-        "INIT_VIEW" => "dayGridMonth", // dayGridMonth, timeGridWeek, timeGridDay, listMonth
-        "FIRST_HOUR" => "8",
-        "LAST_HOUR" => "20",
-    ],
-    false
-);
+?>
+<div style="margin: 0 22px;">
+    <? $APPLICATION->IncludeComponent(
+        "slavko:scheduler",
+        ".default",
+        [
+            "WORKER_ID" => 53,
+            "YEAR" => date('Y'),
+        ],
+        false
+    );?>
+</div>
