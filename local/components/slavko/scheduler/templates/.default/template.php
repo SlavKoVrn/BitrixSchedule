@@ -95,8 +95,21 @@ $(document).ready(function() {
             });
         }
     });
-    
-    global_calendar.fullCalendar('option', 'contentHeight', 300);
+
+    global_calendar.fullCalendar('option', 'contentHeight', 250);
+    $('.fc-timelineDay-button').on('click',function(){
+        global_calendar.fullCalendar('option', 'contentHeight', 250);
+    });
+    $('.fc-timelineThreeDays-button').on('click',function(){
+        global_calendar.fullCalendar('option', 'contentHeight', 250);
+    });
+    $('.fc-agendaWeek-button').on('click',function(){
+        global_calendar.fullCalendar('option', 'contentHeight', 700);
+    });
+    $('.fc-month-button').on('click',function(){
+        global_calendar.fullCalendar('option', 'contentHeight', 500);
+    });
+    setInterval(function(){global_calendar.fullCalendar('refetchEvents')},10*60000);
 });
 function showEventPopup(event) {
     // Determine badge style by type
