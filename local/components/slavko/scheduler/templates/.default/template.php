@@ -157,56 +157,83 @@ function showEventPopup(event) {
                 '</div>' : ''
         ) +
         '</div>' +
-        '<div class="event-popup-footer">' +
-            '<button id="eventPopupCloseBtn" class="btn-close">Закрыть</button>' +
-        '</div>' +
         '</div>';
 
-    var popup = new BX.PopupWindow("eventPopup_" + event.id, null, {
-        content: popupContent,
-        zIndex: 2000,
-        offsetLeft: 0,
-        offsetTop: 0,
-        draggable: {restrict: false},
-        closeByEsc: true,
-        overlay: {backgroundColor: 'black', opacity: '50'},
-        buttons: [],
-        className: "scheduler-event-popup",
-        autoHide: false,
-        events: {
-            onPopupClose: function() {
-                this.destroy();
-            }
-        }
+    showNativePopup(popupContent, function() {
+        // Optional: Code to run after popup is closed
+        console.log("Popup closed successfully");
     });
-    popup.show();
-
-    setTimeout(function() {
-        var popupNode = popup.popupContainer;
-        if (popupNode) {
-            popupNode.style.top = '50%';
-            popupNode.style.left = '50%';
-            popupNode.style.transform = 'translate(-50%, -50%)';
-            popupNode.style.position = 'fixed';
-        }
-
-        var closeBtn = document.getElementById('eventPopupCloseBtn');
-        if (closeBtn) {
-            BX.bind(closeBtn, 'click', function(e) {
-                e.preventDefault();
-                if (popup) {
-                    popup.destroy();
-                    popup = null;
-                }
-            });
-        }
-
-    }, 10);
 }
 
 // Helper: get weekday name by number (0=Sunday, 1=Monday, etc.)
 function getWeekdayName(num) {
     var days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
     return days[num] || '';
+}
+
+function showNativePopup(contentHtml, onCloseCallback) {
+    // 1. Create Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'native-modal-overlay';
+
+    // 2. Create Content Container
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'native-modal-content';
+    contentDiv.innerHTML = contentHtml;
+
+    // 3. Create Close Button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'native-modal-close';
+    closeBtn.innerHTML = '&times;'; // The 'X' symbol
+    closeBtn.setAttribute('aria-label', 'Close');
+
+    // 4. Assemble
+    contentDiv.appendChild(closeBtn);
+    overlay.appendChild(contentDiv);
+    document.body.appendChild(overlay);
+
+    // 5. Function to Close
+    const closePopup = function() {
+        overlay.classList.remove('is-visible');
+
+        // Wait for animation to finish before removing from DOM
+        setTimeout(() => {
+            if (document.body.contains(overlay)) {
+                document.body.removeChild(overlay);
+            }
+            if (typeof onCloseCallback === 'function') {
+                onCloseCallback();
+            }
+        }, 300); // Matches CSS transition time
+    };
+
+    // 6. Event Listeners
+
+    // Click on Close Button
+    closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        closePopup();
+    });
+
+    // Click on Overlay (Background) to close
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closePopup();
+        }
+    });
+
+    // Press ESC to close
+    const escHandler = function(e) {
+        if (e.key === 'Escape') {
+            closePopup();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // 7. Show (Small timeout to allow CSS transition to catch the class change)
+    setTimeout(() => {
+        overlay.classList.add('is-visible');
+    }, 10);
 }
 </script>

@@ -125,3 +125,65 @@
         max-width: 100%;
     }
 }
+
+/* The Overlay (Background) */
+.native-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker, nicer opacity */
+    backdrop-filter: blur(4px); /* Modern blur effect */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* The Popup Box */
+.native-modal-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 500px; /* Adjust width as needed */
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    max-height: 80vh; /* Prevent it from being taller than screen */
+    overflow-y: auto; /* Scroll if content is too long */
+}
+
+/* Animation State: Visible */
+.native-modal-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.native-modal-overlay.is-visible .native-modal-content {
+    transform: translateY(0);
+}
+
+/* Close Button */
+.native-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.native-modal-close:hover {
+    color: #333;
+}
