@@ -35,6 +35,11 @@ $(document).ready(function() {
         editable: true,
         aspectRatio: 1.5,
         scrollTime: '08:00',
+        titleFormat: {
+            month: 'MMMM YYYY',                // For Month view: "Март 2026"
+            week: 'dddd, D MMMM YYYY [г.]',    // For Week views: "Воскресенье, 15 март 2026 г."
+            day: 'dddd, D MMMM YYYY [г.]'      // For Day/Timeline views: "Воскресенье, 15 март 2026 г."
+        },
         header: {
             left: 'promptResource today prev,next',
             center: 'title',
