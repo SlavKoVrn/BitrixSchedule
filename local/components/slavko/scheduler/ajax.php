@@ -1,6 +1,10 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_before.php');
 
+\Bitrix\Main\Loader::includeModule('iblock');
+
+use Bitrix\Iblock\ElementTable;
+
 $action = $_REQUEST['action'] ?? '';
 global $DB;
 
@@ -22,7 +26,7 @@ if ($action === 'getEvents') {
         
         if ($row = $res->Fetch()) {
             $scheduleRaw = json_decode($row['SCHEDULE'], true);
-            
+
             if (is_array($scheduleRaw)) {
                 foreach ($scheduleRaw as $roomId => $roomData) {
                     
@@ -79,6 +83,74 @@ if ($action === 'getEvents') {
     } catch (\Exception $e) {
         // Log error in Bitrix log for debugging
         \Bitrix\Main\Diag\ExceptionHandlerFormatter::log($e);
+        echo \Bitrix\Main\Web\Json::encode(['error' => $e->getMessage()]);
+    }
+} else if ($action === 'getEvent') {
+    $eventId = $_POST['eventId'] ?? '';
+    $workerId = (int)($_REQUEST['worker_id'] ?? 0);
+
+    $parts = explode('_', $eventId);
+    $date = $parts[0];        // date
+    $roomId = (int)$parts[1]; // room id
+
+    try {
+        $sql = "SELECT SCHEDULE FROM sk_schedule WHERE WORKER_ID = " . $workerId;
+        $res = $DB->Query($sql, false);
+
+        if ($row = $res->Fetch()) {
+            $scheduleRaw = json_decode($row['SCHEDULE'], true);
+
+            if (is_array($scheduleRaw) && isset($scheduleRaw[$roomId])) {
+                $roomData = $scheduleRaw[$roomId];
+
+                if (isset($roomData[$date]) && is_array($roomData[$date])) {
+                    $eventData = $roomData[$date];
+
+                    $workerName = '';
+                    $workerIblockId = (int)COption::GetOptionString("slavko.schedule", "worker_iblock_id", 0);
+                    $element = ElementTable::getRow([
+                        'filter' => [
+                            '=ID' => $workerId,
+                            '=IBLOCK_ID' => $workerIblockId,
+                            '=ACTIVE' => true // Only get active elements
+                        ],
+                        'select' => ['NAME']
+                    ]);
+
+                    if (!empty($element['NAME'])) {
+                        $workerName = $element['NAME'];
+                    }
+
+                    $response = [
+                        'id' => $eventId,
+                        'date' => $date,
+                        'room_id' => $roomId,
+                        'room_name' => $roomData['roomName'] ?? 'Room ' . $roomId,
+                        'worker_name' => $workerName,
+                        'type' => $eventData['type'] ?? 'working',
+                        'weekday' => $eventData['weekday'] ?? null,
+                        'start' => $eventData['start'] ?? '09:00',
+                        'end' => $eventData['end'] ?? '18:00',
+                        // Add any additional fields you might need
+                        'is_weekend' => ($eventData['type'] ?? '') === 'weekend',
+                        'is_special' => ($eventData['type'] ?? '') === 'special',
+                    ];
+
+                    echo \Bitrix\Main\Web\Json::encode($response);
+                } else {
+                    echo \Bitrix\Main\Web\Json::encode([
+                        'error' => 'Event not found',
+                        'details' => "No schedule entry for date: {$date} in room: {$roomId}"
+                    ]);
+                }
+            } else {
+                echo \Bitrix\Main\Web\Json::encode(['error' => 'Room not found', 'room_id' => $roomId]);
+            }
+        } else {
+            echo \Bitrix\Main\Web\Json::encode(['error' => 'Schedule not found for worker', 'worker_id' => $workerId]);
+        }
+
+    } catch (\Exception $e) {
         echo \Bitrix\Main\Web\Json::encode(['error' => $e->getMessage()]);
     }
 }

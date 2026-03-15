@@ -1,0 +1,127 @@
+/* Event Popup Styles */
+.scheduler-event-popup .popup-content {
+    padding: 0 !important;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+.event-popup {
+    min-width: 380px;
+    max-width: 480px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.event-popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px 24px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.event-popup-header .event-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.event-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.event-badge.badge-working {
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.4);
+}
+
+.event-badge.badge-weekend {
+    background: #ff6b6b;
+    border: 1px solid #ff5252;
+}
+
+.event-badge.badge-special {
+    background: #ffd93d;
+    color: #333;
+    border: 1px solid #ffc107;
+}
+
+.event-popup-body {
+    padding: 20px 24px;
+    background: #fff;
+}
+
+.event-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.event-row:last-child {
+    border-bottom: none;
+}
+
+.event-label {
+    color: #666;
+    font-size: 14px;
+}
+
+.event-value {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+}
+
+.event-popup-footer {
+    padding: 16px 24px;
+    background: #f8f9fa;
+    text-align: right;
+    border-top: 1px solid #eee;
+}
+
+.btn-close {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-close:hover {
+    background: #5568d3;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .event-popup {
+        min-width: 320px;
+        margin: 0 10px;
+    }
+    .event-popup-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    .event-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .event-value {
+        text-align: left;
+        max-width: 100%;
+    }
+}

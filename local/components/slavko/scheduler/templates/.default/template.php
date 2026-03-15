@@ -8,6 +8,7 @@ $templatePath = $componentPath . '/templates/.default';
 // CSS
 $asset->addCss($templatePath . '/css/fullcalendar.min.css');
 $asset->addCss($templatePath . '/css/scheduler.min.css');
+$asset->addCss($templatePath . '/css/style.css');
 
 // JS - load in correct order
 $asset->addJs($templatePath . '/js/jquery.min.js');
@@ -76,46 +77,144 @@ $(document).ready(function() {
             });
         },
         eventClick: function(calEvent, jsEvent, view) {
-            if (typeof event_id !== 'undefined') event_id.val(calEvent.id);
-            if (typeof event_type !== 'undefined') event_type.val(calEvent.title);
-            
-            $.ajax({
-                url: '/scheduler/default/look-event',
-                type: "POST",
-                data: {'eventId': calEvent.id},
-                success: function(data) {
-                    var obj = JSON.parse(data);
-                    var del = (obj.delete == 'yes');
-                    
-                    if (typeof $('#event_room') !== 'undefined') $('#event_room').val(obj.resourceId);
-                    if (typeof event_start !== 'undefined') event_start.val(obj.date_start);
-                    if (typeof $('#event_hour_from') !== 'undefined') $('#event_hour_from').val(obj.hour_start);
-                    if (typeof $('#event_minute_from') !== 'undefined') $('#event_minute_from').val(obj.min_start);
-                    if (typeof event_end !== 'undefined') event_end.val(obj.date_end);
-                    if (typeof $('#event_hour_to') !== 'undefined') $('#event_hour_to').val(obj.hour_end);
-                    if (typeof $('#event_minute_to') !== 'undefined') $('#event_minute_to').val(obj.min_end);
-                    if (typeof event_name !== 'undefined') event_name.val(obj.name);
-                    if (typeof event_phone !== 'undefined') event_phone.val(obj.phone);
-                    if (typeof event_message !== 'undefined') event_message.val(obj.message);
-                    if (typeof event_remark !== 'undefined') event_remark.val(obj.remark);
-                    if (typeof event_summa !== 'undefined') event_summa.val(obj.summa);
-                    if (typeof $('#event_dealer') !== 'undefined') $('#event_dealer').val(obj.dealer);
-                    if (typeof $('#event_housemaid') !== 'undefined') $('#event_housemaid').val(obj.housemaid);
-                    if (typeof $('#event_callcenter') !== 'undefined') $('#event_callcenter').val(obj.callcenter);
-                    if (typeof $('#event_range') !== 'undefined') $('#event_range').val(obj.range);
-                    if (typeof $('#history') !== 'undefined') $('#history').html(obj.history);
-                    
-                    if (del)
-                        formOpen('delete');
-                    else
-                        formOpen('nodelete');
+            BX.ajax({
+                url: '/local/components/slavko/scheduler/ajax.php?action=getEvent&worker_id=<?= $arParams['WORKER_ID'] ?>',
+                method: 'POST',
+                data: {eventId: calEvent.id},
+                dataType: 'json',
+                onsuccess: function(response) {
+                    if (response.error) {
+                        BX.UI.Dialogs.MessageBox.show({
+                            title: 'Ошибка',
+                            message: response.error,
+                            type: 'error'
+                        });
+                        return;
+                    }
+                    showEventPopup(response);
+                },
+                onfailure: function(xhr, status, error) {
+                    BX.UI.Dialogs.MessageBox.show({
+                        title: 'Ошибка',
+                        message: 'Не удалось загрузить данные события',
+                        type: 'error'
+                    });
                 }
             });
         }
     });
     
-    global_calendar.fullCalendar('option', 'contentHeight', 250);
-    
-    console.log('Calendar initialized successfully!');
+    global_calendar.fullCalendar('option', 'contentHeight', 300);
 });
+function showEventPopup(event) {
+    // Determine badge style by type
+    var badgeClass = '';
+    var badgeText = '';
+
+    switch(event.type) {
+        case 'weekend':
+            badgeClass = 'badge-weekend';
+            badgeText = 'Выходной';
+            break;
+        case 'special':
+            badgeClass = 'badge-special';
+            badgeText = 'Особый график';
+            break;
+        default:
+            badgeClass = 'badge-working';
+            badgeText = 'Рабочий день';
+    }
+
+    // Format date for display
+    var eventDate = new Date(event.date + 'T00:00:00');
+    var formattedDate = eventDate.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    // Build popup content
+    var popupContent =
+        '<div class="event-popup">' +
+        '<div class="event-popup-header">' +
+        '<span class="event-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '<h3 class="event-title">' + event.room_name + '</h3>' +
+        '</div>' +
+        '<div class="event-popup-body">' +
+        '<div class="event-row">' +
+        '<span class="event-label">Врач:</span>' +
+        '<span class="event-value">' + event.worker_name + '</span>' +
+        '</div>' +
+        '<div class="event-row">' +
+        '<span class="event-label">Дата:</span>' +
+        '<span class="event-value">' + formattedDate + '</span>' +
+        '</div>' +
+        '<div class="event-row">' +
+        '<span class="event-label">Время:</span>' +
+        '<span class="event-value">' + event.start + ' – ' + event.end + '</span>' +
+        '</div>' +
+        '<div class="event-row">' +
+        '<span class="event-label">День недели:</span>' +
+        '<span class="event-value">' + getWeekdayName(event.weekday) + '</span>' +
+        '</div>' +
+        (event.weekday_note ?
+                '<div class="event-row">' +
+                '<span class="event-label">Примечание:</span>' +
+                '<span class="event-value">' + event.weekday_note + '</span>' +
+                '</div>' : ''
+        ) +
+        '</div>' +
+        '<div class="event-popup-footer">' +
+            '<button id="eventPopupCloseBtn" class="btn-close">Закрыть</button>' +
+        '</div>' +
+        '</div>';
+
+    var popup = new BX.PopupWindow("eventPopup_" + event.id, null, {
+        content: popupContent,
+        zIndex: 2000,
+        offsetLeft: 0,
+        offsetTop: 0,
+        draggable: {restrict: false},
+        closeByEsc: true,
+        overlay: {backgroundColor: 'black', opacity: '50'},
+        buttons: [],
+        className: "scheduler-event-popup",
+        autoHide: false,
+        events: {
+            onPopupClose: function() {
+                this.destroy();
+            }
+        }
+    });
+    popup.show();
+
+    setTimeout(function() {
+        var popupNode = popup.popupContainer;
+        if (popupNode) {
+            popupNode.style.top = '50%';
+            popupNode.style.left = '50%';
+            popupNode.style.transform = 'translate(-50%, -50%)';
+            popupNode.style.position = 'fixed';
+        }
+
+        var closeBtn = document.getElementById('eventPopupCloseBtn');
+        if (closeBtn) {
+            BX.bind(closeBtn, 'click', function(e) {
+                e.preventDefault();
+                if (popup) {
+                    popup.destroy();
+                    popup = null;
+                }
+            });
+        }
+
+    }, 10);
+}
+
+// Helper: get weekday name by number (0=Sunday, 1=Monday, etc.)
+function getWeekdayName(num) {
+    var days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    return days[num] || '';
+}
 </script>
