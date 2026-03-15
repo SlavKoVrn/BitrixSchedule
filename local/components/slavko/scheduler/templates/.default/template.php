@@ -167,10 +167,7 @@ function showEventPopup(event) {
         '</div>' +
         '</div>';
 
-    showNativePopup(popupContent, function() {
-        // Optional: Code to run after popup is closed
-        console.log("Popup closed successfully");
-    });
+    showNativePopup(popupContent);
 }
 
 // Helper: get weekday name by number (0=Sunday, 1=Monday, etc.)
@@ -179,7 +176,7 @@ function getWeekdayName(num) {
     return days[num] || '';
 }
 
-function showNativePopup(contentHtml, onCloseCallback) {
+function showNativePopup(contentHtml) {
     // 1. Create Overlay
     const overlay = document.createElement('div');
     overlay.className = 'native-modal-overlay';
@@ -209,10 +206,7 @@ function showNativePopup(contentHtml, onCloseCallback) {
             if (document.body.contains(overlay)) {
                 document.body.removeChild(overlay);
             }
-            if (typeof onCloseCallback === 'function') {
-                onCloseCallback();
-            }
-        }, 300); // Matches CSS transition time
+        }, 300);
     };
 
     // 6. Event Listeners
