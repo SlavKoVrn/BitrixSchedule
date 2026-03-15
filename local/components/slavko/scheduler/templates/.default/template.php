@@ -20,6 +20,20 @@ $asset->addJs($templatePath . '/js/analytics.js', ['defer' => true]);
 ?>
 
 <div id="scheduler" class="schedule-calendar">
+    <div class="calendar-legend">
+        <span class="legend-item">
+            <span class="legend-color badge-working"></span>
+            <span class="legend-label">Рабочий день</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color badge-special"></span>
+            <span class="legend-label">Особый график</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color badge-weekend"></span>
+            <span class="legend-label">Выходной</span>
+        </span>
+    </div>
     <div id="calendar"></div>
 </div>
 

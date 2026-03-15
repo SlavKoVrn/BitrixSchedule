@@ -187,3 +187,60 @@
 .native-modal-close:hover {
     color: #333;
 }
+
+/* Calendar Legend Styles */
+.calendar-legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+/* Match colors to your existing badge classes */
+.badge-working {
+    background-color: #28a745; /* Green for working days */
+}
+
+.badge-special {
+    background-color: #ffc107; /* Amber/Yellow for special */
+}
+
+.badge-weekend {
+    background-color: #dc3545; /* Red for weekends */
+}
+
+/* Optional: hover effect for legend items */
+.legend-item:hover {
+    opacity: 0.85;
+    cursor: default;
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 576px) {
+    .calendar-legend {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
