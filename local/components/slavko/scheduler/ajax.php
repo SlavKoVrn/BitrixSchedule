@@ -153,5 +153,13 @@ if ($action === 'getEvents') {
     } catch (\Exception $e) {
         echo \Bitrix\Main\Web\Json::encode(['error' => $e->getMessage()]);
     }
+} else if ($action === 'formatDate') {
+    $date=strtotime($_POST['date']);
+    $json = array(
+        'date'=>gmdate("d.m.Y",$date),
+        'hour'=>gmdate("H",$date),
+        'minute'=>gmdate("i",$date)
+    );
+    echo \Bitrix\Main\Web\Json::encode($json);
 }
 die();

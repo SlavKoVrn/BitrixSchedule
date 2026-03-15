@@ -58,21 +58,16 @@ $(document).ready(function() {
         },
         timeFormat: 'H:mm',
         dayClick: function(date, allDay, jsEvent, view) {
-            $.ajax({
-                url: '/scheduler/default/format-date',
-                type: "POST",
+            BX.ajax({
+                url: '/local/components/slavko/scheduler/ajax.php?action=formatDate',
+                method: 'POST',
                 data: {'date': date.toString()},
-                success: function(data) {
-                    var obj = JSON.parse(data);
-                    if (typeof current_date !== 'undefined' && current_date == 1) {
-                        $('#date_from').val(obj.date);
-                        $('#hour_from').val(obj.hour);
-                        $('#minute_from').val(obj.minute);
-                    } else {
-                        $('#date_to').val(obj.date);
-                        $('#hour_to').val(obj.hour);
-                        $('#minute_to').val(obj.minute);
-                    }
+                dataType: 'json',
+                onsuccess: function(response) {
+                    console.log(response);
+                },
+                onfailure: function(xhr, status, error) {
+                    console.log(error);
                 }
             });
         },
