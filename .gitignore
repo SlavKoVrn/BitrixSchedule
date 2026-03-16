@@ -1,0 +1,6 @@
+# Ignore everything
+*
+
+# Whitelist the local directory
+!local/
+!local/**
